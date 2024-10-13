@@ -6,6 +6,14 @@ import (
 	"go.uber.org/zap"
 )
 
+type Kind string
+
+const (
+	KindInt       Kind = "D"
+	KindString    Kind = "S"
+	KindUndefined Kind = "U"
+)
+
 type Storage struct {
 	innerString map[string]string
 	logger      *zap.Logger
@@ -40,14 +48,25 @@ func (r Storage) Get(key string) *string {
 	return &res
 }
 
-func (r Storage) GetKind(key string) string {
-	res, ok := r.innerString[key]
-	if !ok {
-		return "unknown"
-	}
+func getType(value string) Kind {
+	var val any
 
-	if _, err := strconv.Atoi(res); err == nil {
-		return "D"
+	val, err := strconv.Atoi(value)
+	if err != nil {
+		val = value
 	}
-	return "S"
+	if val == "" {
+		return KindUndefined
+	}
+	if val == "undefined" {
+		return KindUndefined
+	}
+	switch val.(type) {
+	case int:
+		return KindInt
+	case string:
+		return KindString
+	default:
+		return KindUndefined
+	}
 }
